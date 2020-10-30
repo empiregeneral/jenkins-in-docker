@@ -1,0 +1,13 @@
+git-client:1.19.6
+git:2.4.4
+github:1.19.1
+github-api:1.75
+token-macro:1.12.1
+plain-credentials:1.2
+scm-api:1.2
+credentials:2.1.5
+authentication-tokens:1.1
+icon-shim:1.0.3
+gitlab-plugin:1.4.5
+maven-plugin:3.8
+allure:2.28.1

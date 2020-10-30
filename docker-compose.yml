@@ -1,0 +1,31 @@
+version: "3.8"
+services: 
+  master:
+    image: "jenkins/jenkins-master:2.264"
+    environment:
+      JAVA_OPTS: "-Dorg.apache.commons.jelly.tags.fmt.timeZone=Asia/Shanghai -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
+    ports:
+      - "50000:50000"
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+        
+  slaves:
+    image: "jenkins/jenkins-slave-dind:latest"
+    environment:
+      JENKINS_NAME: "Docker_agent"
+      JENKINS_URL: "http://192.168.188.112:8080"
+      JENKINS_SECRET: "25aabe892337165ad69c13682f4651b9659ff6261822f2d7d802b507f41ffe4a"
+      JENKINS_TUNNEL: "192.168.188.112:50000"
+      JAVA_OPTS: "-Xmx2048m -Djava.security.egd=file:/dev/./urandom"
+    privileged: true
+    volumes:
+      - mvn_home:/root/.m2
+
+volumes:
+  jenkins_home: 
+    external:
+      name: jenkins_home
+  mvn_home:
+    external:
+      name: mvn_home
