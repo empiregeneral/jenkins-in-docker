@@ -1,7 +1,7 @@
 version: "3.8"
 services: 
   master:
-    image: "jenkins/jenkins-master:2.264"
+    image: "jenkins/jenkins-master:2.265"
     environment:
       JAVA_OPTS: "-Dorg.apache.commons.jelly.tags.fmt.timeZone=Asia/Shanghai -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
     ports:
