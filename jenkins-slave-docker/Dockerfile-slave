@@ -1,0 +1,61 @@
+FROM centos:latest
+
+RUN yum update -y && yum install -y git curl java java-devel unzip which yum-utils device-mapper-persistent-data lvm2  && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash && yum install -y git-lfs && yum clean all
+ENV JAVA_HOME /etc/alternatives/jre_openjdk
+
+# INSTALL MAVEN
+ADD apache-maven-3.6.1.zip /usr/share/
+RUN unzip /usr/share/apache-maven-3.6.1.zip -d /usr/share
+
+RUN ln -s /usr/share/apache-maven-3.6.1 /usr/share/maven && chmod +x /usr/share/maven/bin/mvn
+
+ENV MAVEN_HOME /usr/share/maven
+
+RUN ln -s ${MAVEN_HOME}/bin/mvn /usr/local/bin/mvn && mkdir -p /root/.m2 && mkdir -p /home/jenkins/workspace
+ADD settings.xml /root/.m2
+
+ARG VERSION=4.5
+ARG user=jenkins
+ARG group=jenkins
+ARG uid=1000
+ARG gid=1000
+ARG JENKINS_HOME=/home/jenkins
+
+RUN mkdir -p /home/jenkins/workspace \
+    && chown -R ${uid}:${gid} ${JENKINS_HOME} \
+    && groupadd -g ${gid} ${group} \
+    && useradd -d "$JENKINS_HOME" -u ${uid} -g ${group} -m -s /bin/bash ${user}
+
+VOLUME ${JENKINS_HOME}
+
+# INSTALL docker-compose
+ADD docker-compose /usr/local/bin/
+
+ADD agent.jar /home/jenkins/agent.jar
+ADD jenkins-agent.sh /home/jenkins/
+ADD docker-entrypoint.sh /
+
+# INSTALL docker
+RUN yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+RUN sed -i "s;7;8;g" /etc/yum.repos.d/docker-ce.repo && yum makecache
+RUN yum install -y docker-ce
+
+ADD wrapdocker /usr/local/bin/wrapdocker
+RUN chmod +x /usr/local/bin/wrapdocker
+
+RUN usermod -a -G docker jenkins
+RUN usermod -a -G root jenkins
+
+ADD gosu-amd64 /usr/local/bin/gosu
+VOLUME /var/lib/docker
+
+#Install allure-commandLine
+ADD allure-commandline-2.13.6.zip /usr/share/allure-commandline-2.13.6.zip
+RUN unzip /usr/share/allure-commandline-2.13.6.zip -d /usr/share \
+    && ln -s /usr/share/allure-2.13.6 /usr/share/allure \
+    && ln -s /usr/share/allure/bin/allure /usr/local/bin/allure
+
+# USER jenkins
+WORKDIR /home/jenkins
+
+ENTRYPOINT ["./jenkins-agent.sh"]

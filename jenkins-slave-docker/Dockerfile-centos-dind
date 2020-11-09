@@ -1,0 +1,29 @@
+FROM centos:latest
+
+RUN yum update -y && yum install -y curl git unzip which
+
+#INSTALL Docker
+RUN curl -sSL https://get.docker.com/ | sh
+
+ADD wrapdocker /usr/local/bin/wrapdocker
+RUN chmod +x /usr/local/bin/wrapdocker
+
+VOLUME /var/lib/docker
+
+ARG user=jenkins
+ARG group=jenkins
+ARG uid=1000
+ARG gid=1000
+ARG JENKINS_HOME=/home/jenkins
+
+RUN mkdir -p /home/jenkins/workspaces \
+    && chown -R ${uid}:${gid} ${JENKINS_HOME} \
+    && groupadd -g ${gid} ${group} \
+    && useradd -d "$JENKINS_HOME" -u ${uid} -g ${group} -m -s /bin/bash ${user}
+
+RUN usermod -a -G docker jenkins
+
+VOLUME /var/lib/docker
+
+CMD ["/usr/local/bin/wrapdocker"]
+
